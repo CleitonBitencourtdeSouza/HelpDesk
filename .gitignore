@@ -1,0 +1,29 @@
+# .NET build
+bin/
+obj/
+**/bin/
+**/obj/
+
+# Rider/VS/VSCode
+.vs/
+.idea/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+.vscode/
+
+# Logs
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Migrations build artifacts
+*.db
+*.db-shm
+*.db-wal
+
+# Secrets
+appsettings.*.local.json
