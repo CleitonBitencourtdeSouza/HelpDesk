@@ -48,7 +48,7 @@ app.UseAuthorization();
 app.MapControllers();
 
 // Garante que o banco exista (útil para SQLite no dev)
-using (var scope = app.Services.CreateScope())
+/*using (var scope = app.Services.CreateScope())
 {
     var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
     db.Database.EnsureCreated();
@@ -57,6 +57,6 @@ using (var scope = app.Services.CreateScope())
     {
         DbSeeder.Seed(db);
     }
-}
+}*/
 
 app.Run();

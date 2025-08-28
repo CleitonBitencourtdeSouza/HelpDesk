@@ -20,11 +20,67 @@ namespace ProjetoHelpDesk.Controllers
         }
 
         // GET: api/chamados
+        // Suporta filtros, ordenação e paginação via query string, por exemplo:
+        //   /api/chamados?status=Aberto&search=impressora&sortBy=dataAbertura&sortDir=desc&page=1&pageSize=10
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Chamado>>> Get()
+        public async Task<ActionResult<IEnumerable<Chamado>>> Get(
+            [FromQuery] StatusChamado? status,
+            [FromQuery] string? search,
+            [FromQuery] string? sortBy,
+            [FromQuery] string? sortDir,
+            [FromQuery] int page = 1,
+            [FromQuery] int pageSize = 10)
         {
-            var chamados = await _context.Chamados.AsNoTracking().ToListAsync();
-            return Ok(chamados);
+            if (page <= 0) page = 1;
+            if (pageSize <= 0 || pageSize > 100) pageSize = 10;
+
+            IQueryable<Chamado> query = _context.Chamados.AsNoTracking();
+
+            // Filtros
+            if (status.HasValue)
+            {
+                query = query.Where(c => c.Status == status.Value);
+            }
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim().ToLower();
+                query = query.Where(c =>
+                    (c.Titulo != null && c.Titulo.ToLower().Contains(term)) ||
+                    (c.Descricao != null && c.Descricao.ToLower().Contains(term))
+                );
+            }
+
+            // Ordenação
+            bool desc = string.Equals(sortDir, "desc", StringComparison.OrdinalIgnoreCase);
+            switch ((sortBy ?? string.Empty).ToLower())
+            {
+                case "titulo":
+                    query = desc ? query.OrderByDescending(c => c.Titulo) : query.OrderBy(c => c.Titulo);
+                    break;
+                case "status":
+                    query = desc ? query.OrderByDescending(c => c.Status) : query.OrderBy(c => c.Status);
+                    break;
+                case "dataabertura":
+                case "data":
+                case "created":
+                    query = desc ? query.OrderByDescending(c => c.DataAbertura) : query.OrderBy(c => c.DataAbertura);
+                    break;
+                default:
+                    // Padrão: DataAbertura desc (mais recentes primeiro)
+                    query = query.OrderByDescending(c => c.DataAbertura);
+                    break;
+            }
+
+            // Paginação
+            var total = await query.CountAsync();
+            var items = await query.Skip((page - 1) * pageSize).Take(pageSize).ToListAsync();
+
+            // Metadados de paginação em headers para facilitar consumo por front-ends
+            Response.Headers["X-Total-Count"] = total.ToString();
+            Response.Headers["X-Page"] = page.ToString();
+            Response.Headers["X-Page-Size"] = pageSize.ToString();
+
+            return Ok(items);
         }
 
         // GET: api/chamados/5
