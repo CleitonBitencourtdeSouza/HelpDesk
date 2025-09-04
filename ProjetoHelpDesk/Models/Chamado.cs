@@ -21,8 +21,10 @@ namespace ProjetoHelpDesk.Models
         public string? Descricao { get; set; }
 
         [JsonConverter(typeof(JsonStringEnumConverter))]
-
-        public StatusChamado Status { get; set; } = StatusChamado.Aberto; // Valores possíveis: "Aberto", "Em Andamento", "Fechado"
+        public StatusChamado Status { get; set; } = StatusChamado.Aberto;
         public DateTime DataAbertura { get; set; } = DateTime.Now;
+
+        // Campo opcional para identificar quem criou (sem relacionamento)
+        public string? CriadoPor { get; set; } = "Sistema";
     }
 }

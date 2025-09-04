@@ -1,4 +1,4 @@
-﻿using Microsoft.EntityFrameworkCore;
+using Microsoft.EntityFrameworkCore;
 using ProjetoHelpDesk.Models;
 
 namespace ProjetoHelpDesk.Data
@@ -9,6 +9,25 @@ namespace ProjetoHelpDesk.Data
 
         // Tabelas do banco de dados
         public DbSet<Chamado> Chamados { get; set; }
-        // Adicione outras tabelas aqui (ex: Usuarios)
+        public DbSet<Usuario> Usuarios { get; set; }
+
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            base.OnModelCreating(modelBuilder);
+
+            // Configuração da entidade Usuario
+            modelBuilder.Entity<Usuario>()
+                .HasIndex(u => u.Email)
+                .IsUnique();
+
+            // Configuração da entidade Chamado (sem relacionamento com Usuario)
+
+            // Configuração de índices
+            modelBuilder.Entity<Chamado>()
+                .HasIndex(c => c.Status);
+                
+            modelBuilder.Entity<Chamado>()
+                .HasIndex(c => c.DataAbertura);
+        }
     }
 }

@@ -5,10 +5,12 @@ using System.Collections.Generic;
 using System.Linq;
 using Microsoft.EntityFrameworkCore;
 using ProjetoHelpDesk.Data;
+using Microsoft.AspNetCore.Authorization;
+using System.Security.Claims;
 
 namespace ProjetoHelpDesk.Controllers
 {
-    [Route("api/[controller]")] // Rota base: /api/chjamados
+    [Route("api/[controller]")] // Rota base: /api/chamados
     [ApiController]
     public class ChamadosController : ControllerBase
     {
@@ -93,19 +95,28 @@ namespace ProjetoHelpDesk.Controllers
         }
 
         // POST: api/chamados
-        [HttpPost]
-        public async Task<ActionResult<Chamado>> Post([FromBody] Chamado novoChamado)
+    [HttpPost]
+    public async Task<ActionResult<Chamado>> Post([FromBody] Chamado novoChamado)
+    {
+        if (!ModelState.IsValid)
         {
-            novoChamado.DataAbertura = DateTime.Now;
-            _context.Chamados.Add(novoChamado);
-            await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetById), new { id = novoChamado.Id }, novoChamado);
+            return BadRequest(ModelState);
         }
+
+        // Para sistema sem autenticação
+        novoChamado.CriadoPor = "Sistema";
+        novoChamado.DataAbertura = DateTime.UtcNow;
+        novoChamado.Status = StatusChamado.Aberto;
+
+        _context.Chamados.Add(novoChamado);
+        await _context.SaveChangesAsync();
+
+        return CreatedAtAction(nameof(GetById), new { id = novoChamado.Id }, novoChamado);
+    }
 
         // PUT: api/chamados/5
         [HttpPut("{id:int}")]
-        public async Task<IActionResult> Put(int id, [FromBody] Chamado chamadoAtualizado)
+    public async Task<IActionResult> Put(int id, [FromBody] Chamado chamadoAtualizado)
         {
             // Observação: não exigimos Id no corpo; usamos o Id da rota
             var existente = await _context.Chamados.FindAsync(id);
@@ -122,8 +133,8 @@ namespace ProjetoHelpDesk.Controllers
         }
 
         // DELETE: api/chamados/5
-        [HttpDelete("{id:int}")]
-        public async Task<IActionResult> Delete(int id)
+    [HttpDelete("{id:int}")]
+    public async Task<IActionResult> Delete(int id)
         {
             var existente = await _context.Chamados.FindAsync(id);
             if (existente == null) return NotFound();
